@@ -13,8 +13,6 @@ bot.on('guildMemberRemove', member => {
 
 bot.on('guildMemberAdd', member => {
     if(member.guild.id === '437625052775710753') {
-        let canalBV = member.guild.channels.get('437662840980242432');
-        canalBV.send('Bem-Vindo, ' + member.user + ' ao grupo ŘΔƤØŞΔĆŘΔ₣Ŧ, chame seus amigos para se divertir!');
         member.send('Obrigado por entrar no **' + member.guild.name + '** ' + member.user.username + '! Chame seus amigos para sé divertir com você! https://discord.gg/26MPNnh');
     }
 });
@@ -168,7 +166,7 @@ bot.on('message', async message => {
                 .addField(prefix + "avatar", 'Um comando para ver os avatares dos outros membros do servidor!')
                 .addField(prefix + 'botinfo', 'Minhas Informações!')
                 .addField(prefix + "falar", 'Quer se divertir? e talvez até enganar outras pessoas, pensando que o bot mesmo está falando? Então use')
-                .addField(prefix + "nick", 'Mude seu Apelido no servidor!')
+                .addField(prefix + "apelido", 'Mude seu Apelido no servidor!')
                 .addField(prefix + "pedido", 'Comando, para você dar ideias para mim :)')
                 .addField(prefix + "ping", 'Veja o seu ping!')
                 .addField(prefix + "corrida", 'Um comando para se divertir, vendo o que acontece em uma corrida')
@@ -216,8 +214,8 @@ bot.on('message', async message => {
 
 
 
-    if(message.content.startsWith(prefix + 'nickname')) {
-        if(comando === 'nickname') {
+    if(message.content.startsWith(prefix + 'apelido')) {
+        if(comando === 'apelido') {
             if(!msgs[0]) return message.reply('Você precisa dizer o seu novo nickname!');
             let Nnick = msgs.slice(22).join(" ");
             if(message.guild.owner.id === message.author.id) return message.reply('Desculpa, Mais não posso mudar seu nickname!');
