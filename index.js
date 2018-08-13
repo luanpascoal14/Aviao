@@ -4,13 +4,6 @@ const config = require('./config.json');
 
 const prefix = config.prefix;
 
-bot.on('guildMemberRemove', member => {
-    if(member.guild.id === '437625052775710753') {
-        let canalSAI = member.guild.channels.get('452259852547522570');
-        canalSAI.send('👈 ' + member.user.username + ' que pena que você saiu :cry:');
-    }
-});
-
 bot.on('guildMemberAdd', member => {
     if(member.guild.id === '437625052775710753') {
         member.send('Obrigado por entrar no **' + member.guild.name + '** ' + member.user.username + '! Chame seus amigos para sé divertir com você! https://discord.gg/26MPNnh');
@@ -216,9 +209,9 @@ bot.on('message', async message => {
 
     if(message.content.startsWith(prefix + 'apelido')) {
         if(comando === 'apelido') {
-            if(!msgs[0]) return message.reply('Você precisa dizer o seu novo nickname!');
+            if(!msgs[0]) return message.reply('Você precisa dizer o seu novo apelido!');
             let Nnick = msgs.slice(22).join(" ");
-            if(message.guild.owner.id === message.author.id) return message.reply('Desculpa, Mais não posso mudar seu nickname!');
+            if(message.guild.owner.id === message.author.id) return message.reply('Desculpa, Mais não posso mudar seu apelido!');
             message.delete().catch();
             message.member.setNickname(Nnick);
             message.reply('Agora seu novo nickname neste servidor é: **' + Nnick + '** !');
@@ -464,7 +457,7 @@ bot.on('message', async message => {
 
 bot.on('ready', () => {
     console.log('[Aviãosito] Iniciado !');
-    bot.user.setActivity('/ajuda', {type:'LISTENING'});
+    bot.user.setActivity('-ajuda', {type:'LISTENING'});
 });
 
 
