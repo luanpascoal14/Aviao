@@ -464,7 +464,7 @@ bot.on('message', async message => {
 
 bot.on('ready', () => {
     console.log('[Aviãosito] Iniciado !');
-    bot.user.setActivity('av!ajuda', {type:'LISTENING'});
+    bot.user.setActivity('/ajuda', {type:'LISTENING'});
 });
 
 
