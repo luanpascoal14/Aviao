@@ -219,10 +219,8 @@ bot.on('message', async message => {
             if(!msgs[0]) return message.reply('Você precisa dizer o seu novo nickname!');
             let Nnick = msgs.slice(22).join(" ");
             if(message.guild.owner.id === message.author.id) return message.reply('Desculpa, Mais não posso mudar seu nickname!');
-            let Nsame = message.member.nickname;
             message.delete().catch();
             message.member.setNickname(Nnick);
-            if(Nsame === message.member.nickname) return message.reply('Desculpe, mas não posso alterar seu nickname!')
             message.reply('Agora seu novo nickname neste servidor é: **' + Nnick + '** !');
         }
     } 
