@@ -216,8 +216,8 @@ bot.on('message', async message => {
 
 
 
-    if(message.content.startsWith(prefix + 'nick')) {
-        if(comando === 'nick') {
+    if(message.content.startsWith(prefix + 'nickname')) {
+        if(comando === 'nickname') {
             if(!msgs[0]) return message.reply('Você precisa dizer o seu novo nickname!');
             let Nnick = msgs.slice(22).join(" ");
             if(message.guild.owner.id === message.author.id) return message.reply('Desculpa, Mais não posso mudar seu nickname!');
