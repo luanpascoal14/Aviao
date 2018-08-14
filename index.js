@@ -4,6 +4,7 @@ const config = require('./config.json');
 
 const prefix = config.prefix;
 
+
 bot.on('guildMemberAdd', member => {
     if(member.guild.id === '437625052775710753') {
         member.send('Obrigado por entrar no **' + member.guild.name + '** ' + member.user.username + '! Chame seus amigos para sé divertir com você! https://discord.gg/26MPNnh');
@@ -11,27 +12,6 @@ bot.on('guildMemberAdd', member => {
 });
 
 
-bot.on('message', async message => {
-
-    const msgs = message.content.slice(config.prefix.length).trim().split(/ +/g);
-    const comando = msgs.shift().toLowerCase();
-
-    if(message.content.startsWith(prefix + 'config')){
-        if(!msgs[0]) return message.reply('Adicione alguma coisa para configurar!');
-        if(msgs[0] === 'Dono'){
-            if(!msgs[1]) return message.reply('Use **av!config Dono (ID)**');
-            if(msgs[1]){
-                const DonoP = await bot.users.get(msgs[1]);
-                let Dono = VarDate(DonoP)
-                 
-            }
-        }
-    }
-    if(message.content.startsWith(prefix + 'dono')){
-        if(!Dono) return message.reply('Usuario indefinido')
-        message.channel.send('<@' + DonoP + '>')
-    }
-})
 
 
 bot.on('message', async message => {
@@ -210,11 +190,11 @@ bot.on('message', async message => {
     if(message.content.startsWith(prefix + 'apelido')) {
         if(comando === 'apelido') {
             if(!msgs[0]) return message.reply('Você precisa dizer o seu novo apelido!');
-            let Nnick = msgs.slice(22).join(" ");
+            let Nnick = msgs.join(' ')
             if(message.guild.owner.id === message.author.id) return message.reply('Desculpa, Mais não posso mudar seu apelido!');
             message.delete().catch();
             message.member.setNickname(Nnick);
-            message.reply('Agora seu novo nickname neste servidor é: **' + Nnick + '** !');
+            message.reply('Agora seu novo apelido neste servidor é: **' + Nnick + '** !');
         }
     } 
     if(message.content.startsWith(prefix + 'pedido')) {
@@ -300,6 +280,7 @@ bot.on('message', async message => {
         var membro = message.mentions.members.first();
         if(!message.member.hasPermissions("BAN_MEMBERS")) return message.reply("você não tem permissão de usar esse comando")
         if(!membro) return message.reply("você não mencinou ninguém")
+        if(membro.highestRole > message.member.highestRole) return message.reply('Você não pode banir uma pessoa de cargo mais alto ou igual ao seu!');
         if(!membro.bannable) return message.reply("Você não pode banir essa pessoa")
         if(razao.length < 1) return message.reply("Coloque um motivo!")
         let BEmbed = new Discord.RichEmbed()
@@ -335,6 +316,7 @@ bot.on('message', async message => {
         var membro = message.mentions.members.first();
         if(!message.member.hasPermissions("KICK_MEMBERS")) return message.reply("você não tem permissão de usar esse comando")
         if(!membro) return message.reply("você não mencionou ninguém")
+        if(membro.highestRole >= message.member.highestRole) return message.reply('Você não pode banir uma pessoa de cargo mais alto ou igual ao seu!');
         if(!membro.kickable) return message.reply("Você não pode kickar essa membro")
         if(razao.length < 1) return message.reply("Coloque um motivo!")
         let KEmbed = new Discord.RichEmbed()
@@ -355,6 +337,7 @@ bot.on('message', async message => {
         if (!msgs[0]) return message.channel.send("Mencione o membro!")
         var user = message.mentions.members.first()
         var razao = msgs.slice(1).join(' ') 
+        if(user.highestRole >= message.member.highestRole) return message.reply('Você não pode banir uma pessoa de cargo mais alto ou igual ao seu!');
         if (!razao) razao = "sem motivo"
         var muteRole = message.guild.roles.find("name", "Silenciado")
         if(!muteRole) return message.channel.send("Não encontrei o cargo Silenciado.");
@@ -427,6 +410,7 @@ bot.on('message', async message => {
         }
     }
 
+
     if(message.content.startsWith(prefix + 'corrida')) {
         let user = message.mentions.users.first();
           if (!user) return message.reply('**Você não mencionou o seu Competidor!**').catch(console.error);
@@ -450,9 +434,127 @@ bot.on('message', async message => {
             })
     }
     
-    
 });
 
+const ytdl = require('ytdl-core');
+const queue = new Map();
+
+bot.on('message', async message => {
+    if(message.author.bot) return;
+    const prefix = config.prefix;
+    if(!message.content.startsWith(prefix)) return;
+    const args = message.content.split(' ');
+    const serverQueue = queue.get(message.guild.id);
+
+    if(message.content.startsWith(prefix + 'tocar')){
+        const voiceChannel = message.member.voiceChannel;
+        if(!voiceChannel) return message.reply('Você precisa estar em um canal de voz!');
+        const permissions = voiceChannel.permissionsFor(message.client.user);
+        if(!permissions.has('CONNECT')) {
+            return message.reply('Eu não pude conectar em seu canal, pois preciso ter algumas permissões!');
+        }
+        if(!permissions.has('SPEAK')) {
+            return message.reply('Eu não posso falar, pois preciso ter algumas permissões!');
+        }
+
+        const songInfo = await ytdl.getInfo(args[1]);
+        const song = {
+            title: songInfo.title,
+            url: songInfo.video_url
+        };
+
+        if(!serverQueue) {
+            const queueConstruct = {
+                textChannel: message.channel,
+                voiceChannel: voiceChannel,
+                connection: null,
+                songs: [],
+                volume: 5,
+                playing: true
+            };
+            queue.set(message.guild.id, queueConstruct);
+
+            queueConstruct.songs.push(song);
+
+            try {
+                var connection = await voiceChannel.join();
+                queueConstruct.connection = connection;
+                play(message.guild, queueConstruct.songs[0]);
+            } catch (error) {
+                console.error('Tive um erro! ' + error);
+                queue.delete(message.guild.id);
+                return message.reply('Eu não pude conectar ao canal, pois tive alguns erros!');
+            }
+
+        } else {
+            serverQueue.songs.push(song);
+            return message.reply(`Adicionado para a lista: **${song.title}**`);
+        }
+        return;
+    } else if (message.content.startsWith(prefix + 'pular')) {
+        if(!message.member.voiceChannel) return message.reply('Você não está em um canal de voz!');
+        if (!serverQueue) return message.reply('Não está tocando nada!');
+        serverQueue.connection.dispatcher.end();
+        return;
+
+
+
+    } else if (message.content.startsWith(prefix + 'parar')){
+        if(!message.member.voiceChannel) return message.reply('Você não está em um canal de voz!');
+        if (!serverQueue) return message.reply('Não está tocando nada!');
+        serverQueue.songs = [];
+        serverQueue.connection.dispatcher.end();
+        return;
+
+
+
+    } else if(message.content.startsWith(prefix + 'volume')) {
+        if(!serverQueue) return message.reply('Não estou tocando nada!');
+        if(!args[1]) return message.reply(`O volume atual é: **${serverQueue.volume}**`);
+        serverQueue.connection.dispatcher.setVolumeLogarithmic(args[1] / 5);
+        return message.reply(`O volume atual agora é: **${args[1]}**`);
+
+
+
+    } else if (message.content.startsWith(prefix + 'tocando')) {
+        if(!serverQueue) return message.reply('Não estou tocando nada!');
+        return message.reply(`Estou Tocando: **${serverQueue.songs[0].title}**`);
+    
+    
+    } else if (message.content.startsWith(prefix + 'lista')) {
+        if (!serverQueue) return message.reply('Eu não estou tocando nada!');
+        return message.reply(`
+==**Lista**==
+${serverQueue.songs.map(song => `**-** ${song.title}`).join('\n')}
+
+**Tocando**: ${serverQueue.songs[0].title}
+        `);
+    }
+    return;
+
+});
+
+function play(guild, song) {
+    const serverQueue = queue.get(guild.id);
+
+    if(!song) {
+        serverQueue.voiceChannel.leave();
+        queue.delete(guild.id);
+        return;
+    }
+
+    const dispatcher = serverQueue.connection.playStream(ytdl(song.url))
+        .on('end', () => {
+            console.log('Musica acabou!');
+            serverQueue.songs.shift();
+            play(guild, serverQueue.songs[0]);
+        })
+        .on('error', error => console.error(error))
+    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
+
+    serverQueue.textChannel.send(`Agora Tocando: **${song.title}**`);
+
+}
 
 
 bot.on('ready', () => {
