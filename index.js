@@ -13,7 +13,6 @@ bot.on('guildMemberAdd', member => {
 
 
 
-
 bot.on('message', async message => {
     if(message.author.bot) return;
     if(message.channel.type === 'dm') return message.reply('Eu sou apenas um Bot, então use comandos em servidores');
@@ -21,19 +20,32 @@ bot.on('message', async message => {
     const msgs = message.content.slice(config.prefix.length).trim().split(/ +/g);
     const comando = msgs.shift().toLowerCase();
 
-    if(message.content.startsWith(prefix + 'si')) {
-        if(comando === 'si'){
-            
-            let SIcon = message.guild.iconURL;
-            
-            let SEmbed = new Discord.RichEmbed()
-            .setThumbnail(SIcon)
-            .setColor('#72a8ff')
-            .setTitle('**' + message.channel.name + '**')
-            .setDescription('Informações:', '⠀')
-            .addField('Server ID: ' + message.guild.id, 'Dono: ' + message.guild.owner.nickname)
-            .addField('Membros: ' + message.guild.memberCount, 'Canais: ' + message.guild.channels.size);
-        }
+    if(message.content.startsWith(prefix + 'serverinfo')) {
+
+        let SIicon = message.guild.iconURL;
+        let SIname = message.guild.name;
+        let SIid = message.guild.id;
+        let SIregion = message.guild.region;
+        let SIdono = message.guild.owner.nickname
+        let SIcreate = message.guild.createdAt
+        let SImembros = message.guild.memberCount;
+
+        //let Online = message.guild.members.filter(a => a.presence.status == "online").size;
+        //let Ocupado = message.guild.members.filter(a => a.presence.status == "dnd").size;
+        //let Ausente = message.guild.members.filter(a => a.presence.status == "idle").size;
+        //let Offline = message.guild.members.filter(a => a.presence.status == "offline").size;
+    
+
+        let SIEmbed = new Discord.RichEmbed()
+        .setColor('#6ba3ff')
+        .setThumbnail(SIicon)
+        .setTitle(SIname)
+        .setDescription('Server ID: ' + SIid, 'Região: ' + SIregion)
+        .addField('Dono: ' + SIdono, 'Criado em: ' + SIcreate);
+        //.addField(`Membros(${SImembros})`, `**Online:** ${Online} | **Ausente:** ${Ocupado} | **Ocupado:** ${Ausente} | **Offline:** ${Offline} `)
+        message.delete();
+        message.reply(SIEmbed)
+
     }
 
     if(message.content.startsWith(prefix + 'ping')) {
@@ -102,6 +114,17 @@ bot.on('message', async message => {
             message.author.send('Sua denuncia foi enviada com sucesso!');
         }
     }
+    if(message.content.startsWith(prefix + 'on')){
+        let Online = message.guild.members.filter(a => a.presence.status == "online").size;
+        let Ocupado = message.guild.members.filter(a => a.presence.status == "dnd").size;
+        let Ausente = message.guild.members.filter(a => a.presence.status == "idle").size;
+        let Offline = message.guild.members.filter(a => a.presence.status == "offline").size;
+    
+        let sinfoembed = new Discord.RichEmbed()
+        .addField('Membros', `**Online:** ${Online} | **Ausente:** ${Ausente} | **Ocupado:** ${Ocupado} | **Offline:** ${Offline} `) ;
+        
+        message.channel.send(sinfoembed);
+    }
 
     if(message.content.startsWith (prefix + 'ajuda')){
         let AEmbed = new Discord.RichEmbed()
@@ -142,6 +165,7 @@ bot.on('message', async message => {
                 .addField(prefix + "apelido", 'Mude seu Apelido no servidor!')
                 .addField(prefix + "pedido", 'Comando, para você dar ideias para mim :)')
                 .addField(prefix + "ping", 'Veja o seu ping!')
+                .addField(prefix + 'on', 'Veja quantos membros estao onlines, ausentes, ocupados e offlines')
                 .addField(prefix + "corrida", 'Um comando para se divertir, vendo o que acontece em uma corrida')
                 .addField(prefix + "notificar", 'Apenas utilizavel em meu servidor, isso é para quando sair uma nova novidade você ficar por dentro de tudo!')
                 msg.edit(AEmbedUti);
