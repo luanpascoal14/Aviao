@@ -258,7 +258,8 @@ bot.on('message', async message => {
 
 
 
-    if (message.content.includes("https://discord.gg/")) {
+    if (message.content.includes("1098675742fvhxsgvvhh
+                           ")) {
         if (!message.member.hasPermission("ADMINISTRATOR")) {
             message.delete();
             message.reply("❌ **Você não pode divulgar aqui!**");
@@ -266,15 +267,8 @@ bot.on('message', async message => {
 
     }
 
-    if (message.content.includes("https://discord.app/invite")) {
-        if (!message.member.hasPermission("ADMINISTRATOR")) {
-            message.delete();
-            message.reply("❌ **Você não pode divulgar aqui!**");
-        }
-
-    }
-
-    if(message.content.startsWith(prefix + 'setartag')){
+    
+    if ( message . content . startsWith ( prefix + 'setartag')){
         if(!message.member.hasPermission('MANAGE_ROLES')) return message.reply('Sem permissão')
 
         if(!msgs[0]) return message.reply('Mencione um usuario')
