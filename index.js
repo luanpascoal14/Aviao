@@ -258,14 +258,7 @@ bot.on('message', async message => {
 
 
 
-    if (message.content.includes("1098675742fvhxsgvvhh
-                           ")) {
-        if (!message.member.hasPermission("ADMINISTRATOR")) {
-            message.delete();
-            message.reply("❌ **Você não pode divulgar aqui!**");
-        }
-
-    }
+    
 
     
     if ( message . content . startsWith ( prefix + 'setartag')){
