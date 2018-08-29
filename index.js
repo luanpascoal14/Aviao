@@ -1,8 +1,28 @@
 const Discord = require('discord.js');
 const bot = new Discord.Client();
+const fs = require('fs');
 const config = require('./config.json');
 
-const prefix = config.prefix;
+
+bot.commands = new Discord.Collection();
+
+
+fs.readdir('./comandos/', (err, files) => {
+
+    if(err) console.log(err)
+
+    let jsfile = files.filter(f => f.split(".").pop() === 'js')
+    if(jsfile.length <= 0){
+        console.log('Não existe comandos!');
+        return;
+    }
+
+    jsfile.forEach((f, i) =>{
+        let props = require(`./comandos/${f}`);
+        console.log(`${f} Carregado!`);
+        bot.commands.set(props.help.name, props);
+    });
+})
 
 
 bot.on('guildMemberAdd', member => {
@@ -10,17 +30,71 @@ bot.on('guildMemberAdd', member => {
         member.send('Obrigado por entrar no **' + member.guild.name + '** ' + member.user.username + '! Chame seus amigos para sé divertir com você! https://discord.gg/26MPNnh');
     }
 });
-
+function clean(text) {
+    if (typeof(text) === "string")
+    return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
+    else
+    return text;
+    }
 
 
 bot.on('message', async message => {
     if(message.author.bot) return;
     if(message.channel.type === 'dm') return message.reply('Eu sou apenas um Bot, então use comandos em servidores');
 
-    const msgs = message.content.slice(config.prefix.length).trim().split(/ +/g);
-    const comando = msgs.shift().toLowerCase();
+    if(bot.user.client.status === 'dnd') return;
+    if(bot.user.client.status === 'idle'){
+        if(!message.author.id === '364241967388950531') return;
+    }
 
-    if(message.content.startsWith(prefix + 'serverinfo')) {
+    let prefixes = JSON.parse(fs.readFileSync("./prefix.json", "utf8"));
+
+    if(!prefixes[message.guild.id]){
+        prefixes[message.guild.id] = {
+            prefixes: config.prefix
+        };
+    }
+
+    let prefix = prefixes[message.guild.id].prefixes;
+
+    if(!message.content.startsWith(prefix)) return; 
+
+    let messageArray = message.content.split(" ");
+    let cmd = messageArray[0];
+    let args = messageArray.slice(1);
+
+    let commandfile = bot.commands.get(cmd.slice(prefix.length));
+    if(commandfile) commandfile.run(bot,message,args);
+
+    if (message.content.startsWith(`${prefix}eval`)) {
+        if(message.author.id !== "364241967388950531") return;
+        try {
+        const code = args.join(" ");
+        let evaled = eval(code);
+        
+        if (typeof evaled !== "string")
+        evaled = require("util").inspect(evaled);
+        
+        message.delete();
+        message.channel.send(clean(evaled), {code:"xl"});
+        } catch (err) {
+        message.channel.send(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);
+        }
+    }
+    
+    /*if(message.content.startsWith(prefix + 'teste')){
+        let Embed = new Discord.RichEmbed()
+        .addField('\<a:malakoi:484192277133000715> \<:idle:438399398796460032> Amarelo', '\<:online:438399398808911882> Verde')
+        .addField('\<:dnd:438399396548313091> Vermelho', '<:offline:438399398762905600> Cinza')
+        .addField('\<:stream:438399396963418131> Roxo', '\<a:Labfm:482171966833426432> Disco')
+
+        message.channel.send(Embed)
+
+        
+    }*/
+
+    //let guild = bot.guilds.find(guild => guild.name == 'nome do servidor');
+    /*if(message.content.startsWith(prefix + 'serverinfo')) {
 
         let SIicon = message.guild.iconURL;
         let SIname = message.guild.name;
@@ -48,6 +122,29 @@ bot.on('message', async message => {
 
     }
 
+    if(message.content === prefix + `reiniciar`) {
+        if(!message.author.id === '364241967388950531') return message.reply('Você não pode me Reiniciar!');
+        resetBot(message.channel)
+            async function resetBot(channel) {
+                channel.send(`Reiniciando...`)
+                .then(msg =>bot.destroy(true))
+                .then(() => bot.login(config.token));
+             }
+    
+        bot.on('ready', () => {
+            message.channel.send(`Bot reiniciado com sucesso!`);
+            console.log('Reiniciado com sucesso!')
+        });
+    }
+
+    if(message.content === prefix + `desligar`) {
+        if(!message.author.id === '364241967388950531') return message.reply('Você não pode me Desligar!');
+        await message.channel.send(`Estou me desligando...`);
+        console.log('Desligando . . .')
+        console.log('[Aviãosito] Desligado!')
+        process.exit();
+    }
+
     if(message.content.startsWith(prefix + 'ping')) {
         if(comando === 'ping'){
             var pingembed = new Discord.RichEmbed()
@@ -59,6 +156,7 @@ bot.on('message', async message => {
             message.channel.send(pingembed)
         }
     }
+
 
     if(message.content.startsWith(prefix + 'avatar')) {
         if(comando === 'avatar'){
@@ -121,7 +219,7 @@ bot.on('message', async message => {
         let Offline = message.guild.members.filter(a => a.presence.status == "offline").size;
     
         let sinfoembed = new Discord.RichEmbed()
-        .addField('Membros', `**Online:** ${Online} | **Ausente:** ${Ausente} | **Ocupado:** ${Ocupado} | **Offline:** ${Offline} `) ;
+        .addField('Membros' + message.guild.memberCount, `\<:online:438399398808911882> **Online:** ${Online} | \<:idle:438399398796460032> **Ausente:** ${Ausente} | \<:dnd:438399396548313091> **Ocupado:** ${Ocupado} | \<:offline:438399398762905600> Cinza**Offline:** ${Offline} `, false) ;
         
         message.channel.send(sinfoembed);
         
@@ -258,10 +356,23 @@ bot.on('message', async message => {
 
 
 
-    
+    if (message.content.includes("https://discord.gg/")) {
+        if (!message.member.hasPermission("ADMINISTRATOR")) {
+            message.delete();
+            message.reply("❌ **Você não pode divulgar aqui!**");
+        }
 
-    
-    if ( message . content . startsWith ( prefix + 'setartag')){
+    }
+
+    if (message.content.includes("https://discord.app/invite")) {
+        if (!message.member.hasPermission("ADMINISTRATOR")) {
+            message.delete();
+            message.reply("❌ **Você não pode divulgar aqui!**");
+        }
+
+    }
+
+    if(message.content.startsWith(prefix + 'setartag')){
         if(!message.member.hasPermission('MANAGE_ROLES')) return message.reply('Sem permissão')
 
         if(!msgs[0]) return message.reply('Mencione um usuario')
@@ -617,9 +728,9 @@ function play(guild, song) {
         .on('error', error => console.error(error))
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
 
-    serverQueue.textChannel.send(`Agora Tocando: **${song.title}**`);
+    serverQueue.textChannel.send(`Agora Tocando: **${song.title}**`);*/
 
-}
+});
 
 
 bot.on('ready', () => {
@@ -629,14 +740,31 @@ bot.on('ready', () => {
 });
 
 bot.on('GuildCreate', () => {
-    console.log(`Entrou em um servidor`)
-    bot.user.setActivity(`-ajuda | ${bot.guilds.size} servers | ${bot.users.size} usuarios`, {type:'WATCHING'});
+    console.log(`Entrou em um servidor: ` + member.guild.name)
+    
+    bot.user.setActivity(`-ajuda | ${bot.guilds.size} Servers | ${bot.users.size} Usuarios`, {type:'WATCHING'});
 });
 
 bot.on('GuildDelete', () => {
-    console.log(`Saiu de um servidor`)
-    bot.user.setActivity(`-ajuda | ${bot.guilds.size} servers | ${bot.users.size} usuarios`, {type:'WATCHING'});
+    console.log(`Saiu de um servidor: ` + member.guild.name)
+    bot.user.setActivity(`-ajuda | ${bot.guilds.size} Servers | ${bot.users.size} Usuarios`, {type:'WATCHING'});
 });
+
+bot.on('guildMemberAdd', member => {
+    console.log('Um Usuario entrou em um servidor: ' + member.guild.name)
+    bot.user.setActivity(`-ajuda | ${bot.guilds.size} Servers | ${bot.users.size} Usuarios`, {type:'WATCHING'});
+});
+
+bot.on('guildMemberDelete', member => {
+    console.log('Um Usuario saiu de um servidor: ' + member.guild.name);
+    bot.user.setActivity(`-ajuda | ${bot.guilds.size} Servers | ${bot.users.size} Usuarios`, {type:'WATCHING'});
+})
+
+/*bot.on('GuildMemberAdd', () => {
+    console.log('Aumento de 1 Usuario');
+    let Stats = [`-ajuda | ${bot.guilds.size} servers | ${bot.users.size} usuarios`, `Me Adicione! http://aviaosito.website2.me`, ``]
+    bot.user.setActivity(`-ajuda | ${bot.guilds.size} servers | ${bot.users.size} usuarios`, {type:'LISTENING'});
+})*/
 
 
 
