@@ -42,10 +42,6 @@ bot.on('message', async message => {
     if(message.author.bot) return;
     if(message.channel.type === 'dm') return message.reply('Eu sou apenas um Bot, então use comandos em servidores');
 
-    if(bot.user.client.status === 'dnd') return;
-    if(bot.user.client.status === 'idle'){
-        if(!message.author.id === '364241967388950531') return;
-    }
 
     let prefixes = JSON.parse(fs.readFileSync("./prefix.json", "utf8"));
 
@@ -59,6 +55,11 @@ bot.on('message', async message => {
 
     if(!message.content.startsWith(prefix)) return; 
 
+    if(bot.user.client.status === 'dnd') return;
+    if(bot.user.client.status === 'idle'){
+        if(message.author.id !== '364241967388950531') return;
+    }
+    
     let messageArray = message.content.split(" ");
     let cmd = messageArray[0];
     let args = messageArray.slice(1);
